@@ -1,0 +1,1142 @@
+
+        # Rename columns to match Pydantic / SQLAlchemy model
+        df.rename(columns={
+            'S.No': 'S_No',
+            'Request Date\n(DD-MM-YY)\n': 'Request_Date',
+            'Tentative On-Air\nDate(DD-MM-YY)': 'Tentative_On_Air_Date',
+            'Service Type': 'Service_Type',
+            'Project name': 'Project_Name',
+            'Circle Name': 'Circle_Name',
+            'District Name': 'District_Name',
+            'Town Name': 'Town_Name',
+            'Site ID': 'Site_ID',
+            'Infra ID': 'Infra_ID',
+            'NSS ID\n(Min & Max Length=10)': 'NSS_ID',
+            'Site Name': 'Site_Name',
+            'RF Cluster': 'RF_Cluster',
+            'IPv4/IPv6\n(2G)': 'IPv4_IPv6_2G',
+            'IPv4/IPv6\n(4G)': 'IPv4_IPv6_4G',
+            'Final Technology (2G/4G/5G/SRAN)': 'Final_Technology',
+            'BTS Vendor': 'BTS_Vendor',
+            '2G Site (TDM/IP)': 'Site_2G_TMD_IP',
+            'BSC ID': 'BSC_ID',
+            'BSC IP': 'BSC_IP',
+            'MME ID': 'MME_ID',
+            'MME IP': 'MME_IP',
+            'SGW ID': 'SGW_ID',
+            'SGW IP': 'SGW_IP',
+            'OSS ID': 'OSS_ID',
+            'OSS IP': 'OSS_IP',
+            'RFAI Status': 'RFAI_Status'
+        }, inplace=True)
+
+
+
+
+
+
+validation in pandas
+# POST API
+# @app.post("/Logs_Data/", response_model=Logs_Data)
+# def Add_Data(log: Logs_Data, db: Session = Depends(get_db)):
+
+#     db_log = database_models.Logs_Data(
+#         S_No=log.S_No,
+#         Request_Date=datetime.now(),
+#         Tentative_On_Air_Date=log.Tentative_On_Air_Date,
+#         Service_Type=log.Service_Type,
+#         Project_Name=log.Project_Name,
+#         Circle_Name=log.Circle_Name,
+#         District_Name=log.District_Name,
+#         Town_Name=log.Town_Name,
+#         Site_ID=log.Site_ID,
+#         Infra_ID=log.Infra_ID,
+#         NSS_ID=log.NSS_ID,
+#         Site_Name=log.Site_Name,
+#         RF_Cluster=log.RF_Cluster,
+#         IPv4_IPv6_2G=log.IPv4_IPv6_2G,
+#         IPv4_IPv6_4G=log.IPv4_IPv6_4G,
+#         Final_Technology=log.Final_Technology,
+#         BTS_Vendor=log.BTS_Vendor,
+#         Site_2G_TMD_IP=log.Site_2G_TMD_IP,
+#         BSC_ID=log.BSC_ID,
+#         BSC_IP=log.BSC_IP,
+#         MME_ID=log.MME_ID,
+#         MME_IP=log.MME_IP,
+#         SGW_ID=log.SGW_ID,
+#         SGW_IP=log.SGW_IP,
+#         OSS_ID=log.OSS_ID,
+#         OSS_IP=log.OSS_IP,
+#         RFAI_Status=log.RFAI_Status
+#     )
+
+#     db.add(db_log)
+#     db.commit()
+#     db.refresh(db_log)
+#     return db_log
+# # Fetch existing NSS_IDs from DB
+#     existing_nss = pd.read_sql(
+#         'SELECT "NSS_ID" FROM "Data"',
+#         con=engine
+#     )
+
+#     existing_nss_set = set(existing_nss["NSS_ID"].dropna())
+#     # Find duplicates
+#     duplicate_nss = df[df["NSS_ID"].isin(existing_nss_set)]["NSS_ID"].unique()
+
+#     if len(duplicate_nss) > 0:
+#         raise HTTPException(
+#             status_code=400,
+#             detail={
+#                 "message": "Duplicate NSS_ID found. Upload rejected.",
+#                 "duplicate_nss_ids": duplicate_nss.tolist()
+#             }
+#         )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Download xlsx file from here 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import os
+# import shutil
+# from uuid import uuid4
+# from typing import List
+
+# from fastapi import FastAPI, HTTPException
+# from fastapi.responses import FileResponse
+
+# from sqlalchemy import select
+# from openpyxl import load_workbook
+
+# from database import SessionLocal
+# from models import Data
+
+# app = FastAPI()
+
+# # ==========================
+# # CONFIG
+# # ==========================
+# BASE_TEMPLATE_DIR = r"C:\CubeXo Internship\FastAPI\CLP_API\excel_outputs"
+# TEMP_DIR = r"C:\CubeXo Internship\FastAPI\CLP_API\temp_downloads"
+
+# os.makedirs(TEMP_DIR, exist_ok=True)
+
+# FILES = {
+#     "ip": "IP-sample-planning-circuit (26).xlsx",
+#     "mw": "MW-sample-planning-circuit (10).xlsx",
+#     "optics": "Optics-sample-planning-circuit (7).xlsx"
+# }
+
+# HEADER_ROW = 3  # Only used for IP
+# START_ROW = 4
+
+# # ==========================
+# # HELPERS
+# # ==========================
+
+# def create_temp_ip_excel(nss_ids: List[str]) -> str:
+#     """
+#     Create temporary IP Excel and write NSS IDs in the correct column
+#     """
+#     original_path = os.path.join(BASE_TEMPLATE_DIR, FILES["ip"])
+#     if not os.path.exists(original_path):
+#         raise Exception("IP template file not found")
+
+#     temp_filename = f"ip_{uuid4().hex}.xlsx"
+#     temp_path = os.path.join(TEMP_DIR, temp_filename)
+
+#     shutil.copy(original_path, temp_path)
+#     wb = load_workbook(temp_path)
+#     ws = wb.active
+
+#     # Find NSS ID column in header row
+#     nss_col = None
+#     for col in range(1, ws.max_column + 1):
+#         header_value = ws.cell(row=HEADER_ROW, column=col).value
+#         if header_value and "NSS ID" in str(header_value):
+#             nss_col = col
+#             break
+
+#     if not nss_col:
+#         raise Exception("NSS ID column not found in IP Excel")
+
+#     # Clear old NSS IDs
+#     for row in range(START_ROW, ws.max_row + 1):
+#         ws.cell(row=row, column=nss_col).value = None
+
+#     # Write new NSS IDs
+#     for idx, nss in enumerate(nss_ids):
+#         ws.cell(row=START_ROW + idx, column=nss_col, value=nss)
+
+#     wb.save(temp_path)
+#     return temp_path
+
+
+# def create_temp_generic_excel(file_type: str, nss_ids: List[str]) -> str:
+#     """
+#     Create MW/Optics Excel and write NSS IDs in column A
+#     """
+#     original_path = os.path.join(BASE_TEMPLATE_DIR, FILES[file_type])
+#     if not os.path.exists(original_path):
+#         raise Exception(f"{file_type.upper()} template file not found")
+
+#     temp_filename = f"{file_type}_{uuid4().hex}.xlsx"
+#     temp_path = os.path.join(TEMP_DIR, temp_filename)
+
+#     shutil.copy(original_path, temp_path)
+#     wb = load_workbook(temp_path)
+#     ws = wb.active
+
+#     # Clear column A
+#     for row in ws.iter_rows(min_row=START_ROW, max_col=1):
+#         row[0].value = None
+
+#     # Write NSS IDs
+#     for idx, nss in enumerate(nss_ids, start=START_ROW):
+#         ws.cell(row=idx, column=1, value=nss)
+
+#     wb.save(temp_path)
+#     return temp_path
+
+# # ==========================
+# # ROUTE
+# # ==========================
+# @app.get("/download/{file_type}")
+# def download_excel(file_type: str):
+#     if file_type not in FILES:
+#         raise HTTPException(status_code=404, detail="Invalid file type")
+
+#     db = SessionLocal()
+#     try:
+#         nss_ids = db.execute(select(Data.NSS_ID).where(Data.NSS_ID.isnot(None))).scalars().all()
+#     finally:
+#         db.close()
+
+#     if not nss_ids:
+#         raise HTTPException(status_code=400, detail="No NSS_ID found in database")
+
+#     # Use IP helper or generic helper
+#     if file_type == "ip":
+#         temp_file = create_temp_ip_excel(nss_ids)
+#     else:
+#         temp_file = create_temp_generic_excel(file_type, nss_ids)
+
+#     return FileResponse(
+#         path=temp_file,
+#         filename=FILES[file_type],
+#         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#     )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BASE_TEMPLATE_DIR = r"C:\CubeXo Internship\FastAPI\CLP_API\excel_outputs"
+TEMP_DIR = r"C:\CubeXo Internship\FastAPI\CLP_API\temp_downloads"
+
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+FILES = {
+    "ip": "IP-sample-planning-circuit (26).xlsx",
+    "mw": "MW-sample-planning-circuit (10).xlsx",
+    "optics": "Optics-sample-planning-circuit (7).xlsx"
+}
+
+START_ROW = 4
+
+from openpyxl import load_workbook
+import shutil
+from uuid import uuid4
+
+def create_temp_excel(file_type: str, nss_ids: list) -> str:
+    original_path = os.path.join(BASE_TEMPLATE_DIR, FILES[file_type])
+
+    temp_filename = f"{file_type}_{uuid4().hex}.xlsx"
+    temp_path = os.path.join(TEMP_DIR, temp_filename)
+
+    # Copy original → temp
+    shutil.copy(original_path, temp_path)
+
+    wb = load_workbook(temp_path)
+    ws = wb.active
+
+    # Clear Column A (from row 4)
+    for row in ws.iter_rows(min_row=START_ROW, max_col=1):
+        row[0].value = None
+
+    # Write NSS_IDs
+    for idx, nss in enumerate(nss_ids, start=START_ROW):
+        ws.cell(row=idx, column=1, value=nss)
+
+    wb.save(temp_path)
+    return temp_path
+
+
+from fastapi.responses import FileResponse
+from sqlalchemy import select
+
+@app.get("/download/{file_type}")
+def download_excel(file_type: str):
+
+    if file_type not in FILES:
+        raise HTTPException(404, "Invalid file type")
+
+    db = SessionLocal()
+    try:
+        nss_ids = db.execute(select(Data.NSS_ID)).scalars().all()
+    finally:
+        db.close()
+
+    if not nss_ids:
+        raise HTTPException(400, "No NSS_ID found in database")
+
+    temp_file = create_temp_excel(file_type, nss_ids)
+
+    return FileResponse(
+        path=temp_file,
+        filename=FILES[file_type],
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+
+
+
+
+
+
+
+ip Columns
+ALTER TABLE "Data"
+ADD COLUMN _2g_bts_ipv4_address_2g_bts_vlan VARCHAR,
+ADD COLUMN _2g_bts_ipv4_address_2g_bts_network VARCHAR,
+ADD COLUMN _2g_bts_ipv4_address_2g_bts_subnet VARCHAR,
+ADD COLUMN _2g_bts_ipv4_address_2g_bts_ip VARCHAR,
+ADD COLUMN _2g_bts_ipv4_address_2g_bts_gw VARCHAR,
+
+ADD COLUMN _2g_bts_ipv6_address_2g_bts_network VARCHAR,
+ADD COLUMN _2g_bts_ipv6_address_2g_bts_subnet VARCHAR,
+ADD COLUMN _2g_bts_ipv6_address_2g_bts_ip VARCHAR,
+ADD COLUMN _2g_bts_ipv6_address_2g_bts_gw VARCHAR,
+
+ADD COLUMN _2g_oam_ipv4_address_2g_bts_vlan VARCHAR,
+ADD COLUMN _2g_oam_ipv4_address_2g_bts_network VARCHAR,
+ADD COLUMN _2g_oam_ipv4_address_2g_bts_subnet VARCHAR,
+ADD COLUMN _2g_oam_ipv4_address_2g_bts_ip VARCHAR,
+ADD COLUMN _2g_oam_ipv4_address_2g_bts_gw VARCHAR,
+
+ADD COLUMN _2g_oam_ipv6_address_2g_bts_network VARCHAR,
+ADD COLUMN _2g_oam_ipv6_address_2g_bts_subnet VARCHAR,
+ADD COLUMN _2g_oam_ipv6_address_2g_bts_ip VARCHAR,
+ADD COLUMN _2g_oam_ipv6_address_2g_bts_gw VARCHAR,
+
+ADD COLUMN _4g_oam_ipv4_address_oam_vlan VARCHAR,
+ADD COLUMN _4g_oam_ipv4_address_oam_netowrk VARCHAR,
+ADD COLUMN _4g_oam_ipv4_address_oam_subnet VARCHAR,
+ADD COLUMN _4g_oam_ipv4_address_oam_ip VARCHAR,
+ADD COLUMN _4g_oam_ipv4_address_oam_gw VARCHAR,
+
+ADD COLUMN _4g_oam_ipv6_address_oam_netowrk VARCHAR,
+ADD COLUMN _4g_oam_ipv6_address_oam_subnet VARCHAR,
+ADD COLUMN _4g_oam_ipv6_address_oam_ip VARCHAR,
+ADD COLUMN _4g_oam_ipv6_address_oam_gw VARCHAR,
+
+ADD COLUMN _4g_s1_c_ipv4_address_s1_c_vlan VARCHAR,
+ADD COLUMN _4g_s1_c_ipv4_address_s1_c_network VARCHAR,
+ADD COLUMN _4g_s1_c_ipv4_address_s1_c_subnet VARCHAR,
+ADD COLUMN _4g_s1_c_ipv4_address_s1_c_ip VARCHAR,
+ADD COLUMN _4g_s1_c_ipv4_address_s1_c_gw VARCHAR,
+
+ADD COLUMN _4g_s1_c_ipv6_address_s1_c_network VARCHAR,
+ADD COLUMN _4g_s1_c_ipv6_address_s1_c_subnet VARCHAR,
+ADD COLUMN _4g_s1_c_ipv6_address_s1_c_ip VARCHAR,
+ADD COLUMN _4g_s1_c_ipv6_address_s1_c_gw VARCHAR,
+
+ADD COLUMN _4g_s1_u_ipv4_address_s1_u_vlan VARCHAR,
+ADD COLUMN _4g_s1_u_ipv4_address_s1_u_network VARCHAR,
+ADD COLUMN _4g_s1_u_ipv4_address_s1_u_subnet VARCHAR,
+ADD COLUMN _4g_s1_u_ipv4_address_s1_u_ip VARCHAR,
+ADD COLUMN _4g_s1_u_ipv4_address_s1_u_gw VARCHAR,
+
+ADD COLUMN _4g_s1_u_ipv6_address_s1_u_network VARCHAR,
+ADD COLUMN _4g_s1_u_ipv6_address_s1_u_subnet VARCHAR,
+ADD COLUMN _4g_s1_u_ipv6_address_s1_u_ip VARCHAR,
+ADD COLUMN _4g_s1_u_ipv6_address_s1_u_gw VARCHAR,
+
+ADD COLUMN _5g_oam_ipv6_address_oam_vlan VARCHAR,
+ADD COLUMN _5g_oam_ipv6_address_oam_netowrk VARCHAR,
+ADD COLUMN _5g_oam_ipv6_address_oam_subnet VARCHAR,
+ADD COLUMN _5g_oam_ipv6_address_oam_ip VARCHAR,
+ADD COLUMN _5g_oam_ipv6_address_oam_gw VARCHAR,
+
+ADD COLUMN _5g_s1_c_ipv6_address_s1_c_vlan VARCHAR,
+ADD COLUMN _5g_s1_c_ipv6_address_s1_c_network VARCHAR,
+ADD COLUMN _5g_s1_c_ipv6_address_s1_c_subnet VARCHAR,
+ADD COLUMN _5g_s1_c_ipv6_address_s1_c_ip VARCHAR,
+ADD COLUMN _5g_s1_c_ipv6_address_s1_c_gw VARCHAR,
+
+ADD COLUMN _5g_s1_u_ipv6_address_s1_u_vlan VARCHAR,
+ADD COLUMN _5g_s1_u_ipv6_address_s1_u_network VARCHAR,
+ADD COLUMN _5g_s1_u_ipv6_address_s1_u_subnet VARCHAR,
+ADD COLUMN _5g_s1_u_ipv6_address_s1_u_ip VARCHAR,
+ADD COLUMN _5g_s1_u_ipv6_address_s1_u_gw VARCHAR,
+
+ADD COLUMN code_cr_details_ip_plan_received_status VARCHAR,
+ADD COLUMN code_cr_details_ip_cr VARCHAR,
+ADD COLUMN code_cr_details_ip_remarks VARCHAR,
+ADD COLUMN code_cr_details_e2e VARCHAR;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from fastapi import FastAPI
+import models
+from database import SessionLocal, engine
+import pandas as pd
+from models import Data
+from fastapi import FastAPI, UploadFile, File
+from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
+import os
+from fastapi.responses import FileResponse
+from sqlalchemy import select
+from openpyxl import load_workbook
+
+app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+
+@app.post("/upload-ran")
+async def upload_excel(file: UploadFile = File(...)):
+
+    file_path = f"temp_{file.filename}"
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    df = pd.read_excel(file_path, skiprows=2)
+    print("Final DB Columns:", df.columns.tolist())
+
+    json_data = df.to_dict(orient="records")
+        # Rename columns to match Pydantic / SQLAlchemy model
+    df.rename(columns={
+        'S.No': 'S_No',
+        'Request Date\n(DD-MM-YY)\n': 'Request_Date',
+        'Tentative On-Air\nDate(DD-MM-YY)': 'Tentative_On_Air_Date',
+        'Service Type': 'Service_Type',
+        'Project name': 'Project_Name',
+        'Circle Name': 'Circle_Name',
+        'District Name': 'District_Name',
+        'Town Name': 'Town_Name',
+        'Site ID': 'Site_ID',
+        'Infra ID': 'Infra_ID',
+        'NSS ID\n(Min & Max Length=10)': 'NSS_ID',
+        'Site Name': 'Site_Name',
+        'RF Cluster': 'RF_Cluster',
+        'IPv4/IPv6\n(2G)': 'IPv4_IPv6_2G',
+        'IPv4/IPv6\n(4G)': 'IPv4_IPv6_4G',
+        'Final Technology (2G/4G/5G/SRAN)': 'Final_Technology',
+        'BTS Vendor': 'BTS_Vendor',
+        '2G Site (TDM/IP)': 'Site_2G_TMD_IP',
+        'BSC ID': 'BSC_ID',
+        'BSC IP': 'BSC_IP',
+        'MME ID': 'MME_ID',
+        'MME IP': 'MME_IP',
+        'SGW ID': 'SGW_ID',
+        'SGW IP': 'SGW_IP',
+        'OSS ID': 'OSS_ID',
+        'OSS IP': 'OSS_IP',
+        'RFAI Status': 'RFAI_Status'
+    }, inplace=True)
+    
+    if df["NSS_ID"].isna().any():
+        raise HTTPException(400, "NSS_ID contains null values")
+
+    if df["NSS_ID"].duplicated().any():
+        raise HTTPException(400, "Duplicate NSS_ID inside uploaded file")
+
+    records = df.to_dict(orient="records")
+    db = SessionLocal()
+    try:
+        db.bulk_insert_mappings(Data, records)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Duplicate NSS_ID found. Upload rejected."
+        )
+    finally:
+        db.close()
+
+    return {
+        "message": "File processed successfully",
+        "rows_inserted": len(records)
+    }
+
+
+
+
+
+
+
+from fastapi.responses import FileResponse
+from openpyxl import load_workbook
+import os, shutil
+from uuid import uuid4
+from typing import List
+
+
+BASE_TEMPLATE_DIR = r"C:\CubeXo Internship\FastAPI\CLP_API\excel_outputs"
+TEMP_DIR = r"C:\CubeXo Internship\FastAPI\CLP_API\temp_downloads"
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+FILES = {
+    "ip": "IP-sample-planning-circuit (26).xlsx",
+    "mw": "MW-sample-planning-circuit (10).xlsx",
+    "optics": "Optics-sample-planning-circuit (7).xlsx"
+}
+
+HEADER_ROW = 3
+START_ROW = 4
+
+# ---------- IP helper ----------
+def create_temp_ip_excel(nss_ids: List[str]) -> str:
+    original_path = os.path.join(BASE_TEMPLATE_DIR, FILES["ip"])
+    temp_path = os.path.join(TEMP_DIR, f"ip_{uuid4().hex}.xlsx")
+    shutil.copy(original_path, temp_path)
+    wb = load_workbook(temp_path)
+    ws = wb.active
+    nss_col = None
+    for col in range(1, ws.max_column + 1):
+        if ws.cell(row=HEADER_ROW, column=col).value and "NSS ID" in str(ws.cell(row=HEADER_ROW, column=col).value):
+            nss_col = col
+            break
+    if not nss_col:
+        raise Exception("NSS ID column not found in IP Excel")
+    for row in range(START_ROW, ws.max_row + 1):
+        ws.cell(row=row, column=nss_col).value = None
+    for idx, nss in enumerate(nss_ids):
+        ws.cell(row=START_ROW + idx, column=nss_col).value = nss
+    wb.save(temp_path)
+    return temp_path
+
+# ---------- Generic helper ----------
+def create_temp_generic_excel(file_type: str, nss_ids: List[str]) -> str:
+    original_path = os.path.join(BASE_TEMPLATE_DIR, FILES[file_type])
+    temp_path = os.path.join(TEMP_DIR, f"{file_type}_{uuid4().hex}.xlsx")
+    shutil.copy(original_path, temp_path)
+    wb = load_workbook(temp_path)
+    ws = wb.active
+    for row in ws.iter_rows(min_row=START_ROW, max_col=1):
+        row[0].value = None
+    for idx, nss in enumerate(nss_ids, start=START_ROW):
+        ws.cell(row=idx, column=1).value = nss
+    wb.save(temp_path)
+    return temp_path
+
+@app.get("/download/ip-only", tags=["IP"])
+def download_ip_only():
+    db = SessionLocal()
+    try:
+        nss_ids = db.execute(select(Data.NSS_ID).where(Data.NSS_ID.isnot(None))).scalars().all()
+    finally:
+        db.close()
+    if not nss_ids:
+        raise HTTPException(status_code=400, detail="No NSS_ID found")
+    temp_file = create_temp_ip_excel(nss_ids)
+    return FileResponse(path=temp_file, filename=FILES["ip"], media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+# ---------- MW route ----------
+@app.get("/download/mw", tags=["MW"])
+def download_mw():
+    db = SessionLocal()
+    try:
+        nss_ids = db.execute(select(Data.NSS_ID).where(Data.NSS_ID.isnot(None))).scalars().all()
+    finally:
+        db.close()
+    if not nss_ids:
+        raise HTTPException(status_code=400, detail="No NSS_ID found")
+    temp_file = create_temp_generic_excel("mw", nss_ids)
+    return FileResponse(path=temp_file, filename=FILES["mw"], media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+# ---------- Optics route ----------
+@app.get("/download/optics", tags=["Optics"])
+def download_optics():
+    db = SessionLocal()
+    try:
+        nss_ids = db.execute(select(Data.NSS_ID).where(Data.NSS_ID.isnot(None))).scalars().all()
+    finally:
+        db.close()
+    if not nss_ids:
+        raise HTTPException(status_code=400, detail="No NSS_ID found")
+    temp_file = create_temp_generic_excel("optics", nss_ids)
+    return FileResponse(path=temp_file, filename=FILES["optics"], media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+
+
+
+from sqlalchemy.orm import Session
+
+
+# Map Excel headers to DB column names
+COLUMN_MAP = {
+    "NSS ID\n(Min & Max Length=10)": "NSS_ID",  # Mandatory
+    "Optics Plan Received Status(Yes/No/NR)": "optics_plan_received_status",  # Mandatory
+    "GNE-Optics POP/Mux Hostname 4G/5G": "gne_optics_pop_mux_hostname_4g_5g",
+    "GNE-POP/Mux Port 4G/5G": "gne_pop_mux_port_4g_5g",
+    "GNE Interface Remarks": "gne_interface_remarks",
+    "Reference VLAN (Existing Interface)": "reference_vlan_existing_interface",
+    "Router Location(2G/4G/5G)": "router_location_2g_4g_5g",
+    "Router POP NSS ID(2G/4G/5G)": "router_pop_nss_id_2g_4g_5g",
+    "Router Hostname(2G/4G/5G)": "router_hostname_2g_4g_5g",
+    "Router SB Port(2G/4G/5G)": "router_sb_port_2g_4g_5g",
+    "SB-Optics POP/Mux Hostname SB(Towards CEN)": "sb_optics_pop_mux_hostname_sb_towards_cen",
+    "SB-Optics POP/Mux Ports SB(Towards CEN)": "sb_optics_pop_mux_ports_sb_towards_cen",
+    "Port Status (New/Existing)(2G/4G/5G)": "port_status_new_existing_2g_4g_5g",
+    "Optics Service Label": "optics_service_label",
+    "Main Path": "main_path",
+    "Protection Path": "protection_path",
+    "Optics OSM": "optics_osm",
+    "Optics Remarks": "optics_remarks"
+}
+
+@app.post("/upload-optics-excel")
+async def upload_optics_excel(file: UploadFile = File(...)):
+    # Save temp file
+    temp_file = f"temp_{file.filename}"
+    with open(temp_file, "wb") as f:
+        f.write(await file.read())
+
+    try:
+        # Skip first 2 rows if your Excel has a header row on 3rd row
+        df = pd.read_excel(temp_file, skiprows=2)
+
+        # Rename columns to match DB
+        df.rename(columns=COLUMN_MAP, inplace=True)
+
+        # Check mandatory columns
+        mandatory_cols = ["NSS_ID", "optics_plan_received_status"]
+        for col in mandatory_cols:
+            if col not in df.columns:
+                raise HTTPException(status_code=400, detail=f"Mandatory column {col} missing")
+            if df[col].isna().any():
+                raise HTTPException(status_code=400, detail=f"Mandatory column {col} contains null values")
+
+        # Replace NaN with None for DB
+        df = df.where(pd.notnull(df), None)
+
+        records = df.to_dict(orient="records")
+
+        db: Session = SessionLocal()
+        try:
+            for record in records:
+                # Update existing row based on NSS_ID
+                db_obj = db.query(Data).filter(Data.NSS_ID == record["NSS_ID"]).first()
+                if db_obj:
+                    for key, value in record.items():
+                        setattr(db_obj, key, value)
+                else:
+                    # Optionally, reject new NSS_IDs if they are not present in DB
+                    raise HTTPException(status_code=400, detail=f"NSS_ID {record['NSS_ID']} not found in database")
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise HTTPException(status_code=409, detail=f"Database integrity error: {e}")
+        finally:
+            db.close()
+    finally:
+        os.remove(temp_file)
+
+    return {"message": "Excel data updated successfully", "rows_processed": len(records)}
+
+
+
+    
+    
+    
+    
+    
+#MW 
+
+MW_COLUMN_MAP = {
+    "NSS ID\n(Min & Max Length=10)": "NSS_ID",                     # mandatory
+    "POP NSS ID\n(Min & Max Length=10)": "pop_nss_id",             # mandatory
+    "POP Name": "pop_name",
+    "MW path(POP to Node)": "mw_path_pop_to_node",
+    "MW OEM": "mw_oem",
+    "Media Type\nMW/Optics/Router": "media_type_mw_optics_router",
+    "MW Dropping IDU NE Name": "mw_dropping_idu_ne_name",
+    "MW Dropping IDU NE Port": "mw_dropping_idu_ne_port",
+    "Port Type (Electrical/Optical)": "mw_port_type_electrical_optical",
+    "MW GNE IDU NE Name": "mw_gne_idu_ne_name",
+    "MW GNE IDU Port": "mw_gne_idu_port",
+    "MW Port Status": "mw_port_status",
+    "Reference Vlan/Site Id /Existing Interface": "reference_vlan_site_id_existing_interface",
+    "MW Plan Received Status(Yes/No/NR)": "mw_plan_received_status",  # mandatory
+    "MW OSM": "mw_osm",                                              # mandatory
+    "MW Remarks": "mw_remarks"
+}
+@app.post("/upload-mw-excel", tags=["MW"])
+async def upload_mw_excel(file: UploadFile = File(...)):
+    temp_file = f"temp_{file.filename}"
+
+    with open(temp_file, "wb") as f:
+        f.write(await file.read())
+
+    try:
+        # Header is on 3rd row
+        df = pd.read_excel(temp_file, skiprows=2)
+
+        # Rename Excel columns → DB columns
+        df.rename(columns=MW_COLUMN_MAP, inplace=True)
+
+        # 🔴 Mandatory green columns
+        mandatory_cols = [
+            "NSS_ID",
+            # "pop_nss_id",
+            "mw_plan_received_status",
+            "mw_osm"
+        ]
+
+        for col in mandatory_cols:
+            if col not in df.columns:
+                raise HTTPException(400, f"Mandatory column missing: {col}")
+            if df[col].isna().any():
+                raise HTTPException(400, f"Mandatory column has null values: {col}")
+
+        # Replace NaN → None
+        df = df.where(pd.notnull(df), None)
+
+        records = df.to_dict(orient="records")
+
+        db = SessionLocal()
+        try:
+            for record in records:
+                db_obj = db.query(Data).filter(
+                    Data.NSS_ID == record["NSS_ID"]
+                ).first()
+
+                if not db_obj:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"NSS_ID {record['NSS_ID']} not found in DB"
+                    )
+
+                for key, value in record.items():
+                    if key != "NSS_ID":   # never update PK
+                        setattr(db_obj, key, value)
+
+            db.commit()
+
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    finally:
+        os.remove(temp_file)
+
+    return {
+        "message": "MW Excel data updated successfully",
+        "rows_processed": len(records)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+IP_COLUMN_MAP = {
+    "NSS ID\n(Min & Max Length=10)": "NSS_ID",                     # mandatory
+    # 2G BTS IPv4
+    "2G-BTS Vlan": "_2g_bts_ipv4_address_2g_bts_vlan",
+    "2G-BTS Network": "_2g_bts_ipv4_address_2g_bts_network",
+    "2G-BTS Subnet": "_2g_bts_ipv4_address_2g_bts_subnet",
+    "2G-BTS IP": "_2g_bts_ipv4_address_2g_bts_ip",
+    "2G-BTS GW": "_2g_bts_ipv4_address_2g_bts_gw",
+
+    # 2G BTS IPv6
+    "2G-BTS Network.1": "_2g_bts_ipv6_address_2g_bts_network",
+    "2G-BTS Subnet.1": "_2g_bts_ipv6_address_2g_bts_subnet",
+    "2G-BTS IP.1": "_2g_bts_ipv6_address_2g_bts_ip",
+    "2G-BTS GW.1": "_2g_bts_ipv6_address_2g_bts_gw",
+
+    # 2G OAM IPv4
+    "2G-BTS Vlan.1": "_2g_oam_ipv4_address_2g_bts_vlan",
+    "2G-BTS Network.2": "_2g_oam_ipv4_address_2g_bts_network",
+    "2G-BTS Subnet.2": "_2g_oam_ipv4_address_2g_bts_subnet",
+    "2G-BTS IP.2": "_2g_oam_ipv4_address_2g_bts_ip",
+    "2G-BTS GW.2": "_2g_oam_ipv4_address_2g_bts_gw",
+
+    # 2G OAM IPv6
+    "2G-BTS Network.3": "_2g_oam_ipv6_address_2g_bts_network",
+    "2G-BTS Subnet.3": "_2g_oam_ipv6_address_2g_bts_subnet",
+    "2G-BTS IP.3": "_2g_oam_ipv6_address_2g_bts_ip",
+    "2G-BTS GW.3": "_2g_oam_ipv6_address_2g_bts_gw",
+
+    # 4G OAM IPv4
+    "OAM Vlan": "_4g_oam_ipv4_address_oam_vlan",
+    "OAM Network": "_4g_oam_ipv4_address_oam_netowrk",
+    "OAM Subnet": "_4g_oam_ipv4_address_oam_subnet",
+    "OAM IP": "_4g_oam_ipv4_address_oam_ip",
+    "OAM GW": "_4g_oam_ipv4_address_oam_gw",
+
+    # 4G OAM IPv6
+    "OAM Network.1": "_4g_oam_ipv6_address_oam_netowrk",
+    "OAM Subnet.1": "_4g_oam_ipv6_address_oam_subnet",
+    "OAM IP.1": "_4g_oam_ipv6_address_oam_ip",
+    "OAM GW.1": "_4g_oam_ipv6_address_oam_gw",
+
+    # 4G S1-C IPv4
+    "S1-C Vlan": "_4g_s1_c_ipv4_address_s1_c_vlan",
+    "S1-C Network": "_4g_s1_c_ipv4_address_s1_c_network",
+    "S1-C Subnet": "_4g_s1_c_ipv4_address_s1_c_subnet",
+    "S1-C IP": "_4g_s1_c_ipv4_address_s1_c_ip",
+    "S1-C GW": "_4g_s1_c_ipv4_address_s1_c_gw",
+
+    # 4G S1-C IPv6
+    "S1-C Network.1": "_4g_s1_c_ipv6_address_s1_c_network",
+    "S1-C Subnet.1": "_4g_s1_c_ipv6_address_s1_c_subnet",
+    "S1-C IP.1": "_4g_s1_c_ipv6_address_s1_c_ip",
+    "S1-C GW.1": "_4g_s1_c_ipv6_address_s1_c_gw",
+
+    # 4G S1-U IPv4
+    "S1-U Vlan": "_4g_s1_u_ipv4_address_s1_u_vlan",
+    "S1-U Network": "_4g_s1_u_ipv4_address_s1_u_network",
+    "S1_U Subnet": "_4g_s1_u_ipv4_address_s1_u_subnet",
+    "S1-U IP": "_4g_s1_u_ipv4_address_s1_u_ip",
+    "S1-U GW": "_4g_s1_u_ipv4_address_s1_u_gw",
+
+    # 4G S1-U IPv6
+    "S1-U Network.1": "_4g_s1_u_ipv6_address_s1_u_network",
+    "S1_U Subnet.1": "_4g_s1_u_ipv6_address_s1_u_subnet",
+    "S1-U IP.1": "_4g_s1_u_ipv6_address_s1_u_ip",
+    "S1-U GW.1": "_4g_s1_u_ipv6_address_s1_u_gw",
+
+    # 5G OAM
+    "OAM Vlan.1": "_5g_oam_ipv6_address_oam_vlan",
+    "OAM Network.2": "_5g_oam_ipv6_address_oam_netowrk",
+    "OAM Subnet.2": "_5g_oam_ipv6_address_oam_subnet",
+    "OAM IP.2": "_5g_oam_ipv6_address_oam_ip",
+    "OAM GW.2": "_5g_oam_ipv6_address_oam_gw",
+
+    # 5G S1-C
+    "S1-C Vlan.1": "_5g_s1_c_ipv6_address_s1_c_vlan",
+    "S1-C Network.2": "_5g_s1_c_ipv6_address_s1_c_network",
+    "S1-C Subnet.2": "_5g_s1_c_ipv6_address_s1_c_subnet",
+    "S1-C IP.2": "_5g_s1_c_ipv6_address_s1_c_ip",
+    "S1-C GW.2": "_5g_s1_c_ipv6_address_s1_c_gw",
+
+    # 5G S1-U
+    "S1-U Vlan.1": "_5g_s1_u_ipv6_address_s1_u_vlan",
+    "S1-U Network.2": "_5g_s1_u_ipv6_address_s1_u_network",
+    "S1-U Subnet": "_5g_s1_u_ipv6_address_s1_u_subnet",
+    "S1-U IP.2": "_5g_s1_u_ipv6_address_s1_u_ip",
+    "S1-U GW.2": "_5g_s1_u_ipv6_address_s1_u_gw",
+
+    # CR Details
+    "IP Plan Received Status(Yes/No/NR)": "code_cr_details_ip_plan_received_status",
+    "IP CR": "code_cr_details_ip_cr",
+    "IP Remarks": "code_cr_details_ip_remarks",
+    "E2E(Yes/No)": "code_cr_details_e2e",
+}
+
+
+@app.post("/upload-ip-excel", tags=["IP-upload"])
+async def upload_ip_excel(file: UploadFile = File(...)):
+    temp_file = f"temp_{file.filename}"
+
+    with open(temp_file, "wb") as f:
+        f.write(await file.read())
+
+    try:
+        # Header is on 3rd row
+        df = pd.read_excel(temp_file, skiprows=2)
+
+        # Rename Excel columns → DB columns
+        df.rename(columns=IP_COLUMN_MAP, inplace=True)
+
+        # 🔴 Mandatory green columns
+        MANDATORY_COLS = [
+            # 2G BTS IPv4
+            "_2g_bts_ipv4_address_2g_bts_vlan",
+            "_2g_bts_ipv4_address_2g_bts_ip",
+            "_2g_bts_ipv4_address_2g_bts_gw",
+
+            # 2G BTS IPv6
+            "_2g_bts_ipv6_address_2g_bts_ip",
+            "_2g_bts_ipv6_address_2g_bts_gw",
+
+            # 2G OAM IPv4
+            "_2g_oam_ipv4_address_2g_bts_vlan",
+            "_2g_oam_ipv4_address_2g_bts_ip",
+            "_2g_oam_ipv4_address_2g_bts_gw",
+
+            # 2G OAM IPv6
+            "_2g_oam_ipv6_address_2g_bts_ip",
+            "_2g_oam_ipv6_address_2g_bts_gw",
+
+            # 4G OAM IPv4
+            "_4g_oam_ipv4_address_oam_vlan",
+            "_4g_oam_ipv4_address_oam_ip",
+            "_4g_oam_ipv4_address_oam_gw",
+
+            # 4G OAM IPv6
+            "_4g_oam_ipv6_address_oam_ip",
+            "_4g_oam_ipv6_address_oam_gw",
+
+            # 4G S1-C IPv4
+            "_4g_s1_c_ipv4_address_s1_c_vlan",
+            "_4g_s1_c_ipv4_address_s1_c_ip",
+            "_4g_s1_c_ipv4_address_s1_c_gw",
+
+            # 4G S1-C IPv6
+            "_4g_s1_c_ipv6_address_s1_c_ip",
+            "_4g_s1_c_ipv6_address_s1_c_gw",
+
+            # 4G S1-U IPv4
+            "_4g_s1_u_ipv4_address_s1_u_vlan",
+            "_4g_s1_u_ipv4_address_s1_u_ip",
+            "_4g_s1_u_ipv4_address_s1_u_gw",
+
+            # 4G S1-U IPv6
+            "_4g_s1_u_ipv6_address_s1_u_ip",
+            "_4g_s1_u_ipv6_address_s1_u_gw",
+
+            # 5G OAM
+            "_5g_oam_ipv6_address_oam_vlan",
+            "_5g_oam_ipv6_address_oam_ip",
+            "_5g_oam_ipv6_address_oam_gw",
+
+            # 5G S1-C
+            "_5g_s1_c_ipv6_address_s1_c_vlan",
+            "_5g_s1_c_ipv6_address_s1_c_ip",
+            "_5g_s1_c_ipv6_address_s1_c_gw",
+
+            # CR details (still mandatory)
+            "code_cr_details_ip_plan_received_status",
+            "code_cr_details_ip_cr",
+            "code_cr_details_e2e",
+        ]
+
+
+        for col in MANDATORY_COLS:
+            if col not in df.columns:
+                raise HTTPException(400, f"Mandatory column missing: {col}")
+            if df[col].isna().any():
+                raise HTTPException(400, f"Mandatory column has null values: {col}")
+
+        # Replace NaN → None
+        df = df.where(pd.notnull(df), None)
+
+        records = df.to_dict(orient="records")
+
+        db = SessionLocal()
+        try:
+            for record in records:
+                db_obj = db.query(Data).filter(
+                    Data.NSS_ID == record["NSS_ID"]
+                ).first()
+
+                if not db_obj:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"NSS_ID {record['NSS_ID']} not found in DB"
+                    )
+
+                for key, value in record.items():
+                    if key != "NSS_ID":   # never update PK
+                        setattr(db_obj, key, value)
+
+            db.commit()
+
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    finally:
+        os.remove(temp_file)
+
+    return {
+        "message": "IP Excel data updated successfully",
+        "rows_processed": len(records)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Validation Rules by Section
+2G Sections – BTS, OAM
+
+VLAN optional.
+
+If VLAN present → IP & GW pair mandatory (either IPv4 or IPv6).
+
+Network & Subnet not mandatory.
+
+If VLAN missing, skip IP/GW check.
+
+4G Sections – OAM, S1-C, S1-U
+
+VLAN optional.
+
+If VLAN present → IP & GW pair mandatory (either IPv4 or IPv6).
+
+Network & Subnet not mandatory.
+
+If VLAN missing, skip IP/GW check.
+
+5G Sections – OAM, S1-C, S1-U
+
+Only IPv6 considered.
+
+VLAN optional.
+
+If VLAN present → IP & GW pair mandatory.
+
+If VLAN missing, skip validation.
